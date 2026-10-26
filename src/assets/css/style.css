@@ -1,0 +1,36 @@
+:root {
+  font-size: 14px;
+  --spacing-quarter: calc(var(--spacing-default) / 4);
+  --spacing-half: calc(var(--spacing-default) / 2);
+  --spacing-default: 0.5rem;
+  --spacing-double: calc(var(--spacing-default) * 2);
+  --spacing-triple: calc(var(--spacing-default) * 3);
+  --spacing-quadruple: calc(var(--spacing-default) * 4);
+  --spacing-pentuple: calc(var(--spacing-default) * 5);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  overflow: hidden;
+}
+
+#wrapper-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100dvw;
+  height: 100dvh;
+  overflow: hidden;
+  background-color: #0006;
+  z-index: -1;
+}
+
+main {
+  height: 100dvh;
+  background-color: #fff;
+}
