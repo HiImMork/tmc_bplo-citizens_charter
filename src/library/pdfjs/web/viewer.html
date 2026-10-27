@@ -53,7 +53,9 @@ See https://github.com/adobe-type-tools/cmap-resources
                         enableAltText: false,
                         enableScripting: false,
                         disableHistory: true,
-                        defaultZoomValue: "page-fit"
+                        defaultZoomValue: "page-fit",
+                        scrollModeOnLoad: 1,   // 1 = horizontal scrolling
+                        spreadModeOnLoad: 1    // 1 = two-page spreads (pages 1-2, 3-4, ...); use 2 if page 1 is a cover
                     };
                     Object.keys(opts).forEach(function (k) { try { o.set(k, opts[k]); } catch (err) { } });
                 }
@@ -1248,6 +1250,19 @@ See https://github.com/adobe-type-tools/cmap-resources
                     n = Math.min(Math.max(parseInt(n, 10) || 1, 1), pages());
                     app.pdfViewer.currentPageNumber = n;
                 }
+                // First page of the spread that contains page p (spread mode 0 = none, 1 = odd, 2 = even).
+                function spreadStart(p) {
+                    var mode = app.pdfViewer.spreadMode;
+                    return mode === 1 ? p - ((p - 1) % 2) : mode === 2 ? (p < 2 ? 1 : p - (p % 2)) : p;
+                }
+                // Previous / next move one spread (two pages) at a time.
+                function step(dir) {
+                    if (!app || !pages()) return;
+                    var mode = app.pdfViewer.spreadMode, start = spreadStart(app.page), n;
+                    if (dir > 0) n = (mode === 2 && start === 1) ? 2 : start + (mode ? 2 : 1);
+                    else n = (mode === 2 && start === 2) ? 1 : start - (mode ? 2 : 1);
+                    goTo(n);   // goTo clamps to the first / last page
+                }
                 function find(type, back) {
                     if (!app) return;
                     app.eventBus.dispatch("find", {
@@ -1278,8 +1293,8 @@ See https://github.com/adobe-type-tools/cmap-resources
                     if (!a) return;
                     var act = a.getAttribute("data-act");
                     if (act === "close") closeModal();
-                    else if (act === "prev") goTo((app ? app.page : 1) - 1);
-                    else if (act === "next") goTo((app ? app.page : 1) + 1);
+                    else if (act === "prev") step(-1);
+                    else if (act === "next") step(1);
                     else if (act === "findnext") find("again", false);
                     else if (act === "findprev") find("again", true);
                 });
@@ -1308,7 +1323,7 @@ See https://github.com/adobe-type-tools/cmap-resources
                     if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || (t && t.isContentEditable)) return;
                     e.preventDefault(); e.stopImmediatePropagation();
                     armIdle(); if (!app || modal.classList.contains("open") || document.querySelector("dialog[open]")) return;
-                    goTo(app.page + (e.key === "ArrowRight" ? 1 : -1));
+                    step(e.key === "ArrowRight" ? 1 : -1);
                 }, true);
 
                 window.addEventListener("keydown", function (e) {
@@ -1341,21 +1356,54 @@ See https://github.com/adobe-type-tools/cmap-resources
                         try { a[m] = function () { }; } catch (err) { }
                     });
                     var bus = a.eventBus;
-                    var locking = false;
+                    var locking = false, target = 0;
+                    function setModes() {                       // horizontal scrolling + two-page spreads
+                        var v = a.pdfViewer;
+                        if (v.scrollMode !== 1) v.scrollMode = 1;
+                        if (v.spreadMode !== 1) v.spreadMode = 1;
+                    }
+                    // Size the view so exactly ONE two-page spread fills the screen: as tall as the screen allows (or as
+                    // wide, on a narrow screen). The scrolling area is then made exactly one spread wide and centred, so no
+                    // part of the neighbouring spread can ever be seen.
                     function fit() {
-                        if (locking || !a.pdfViewer.pdfDocument) return;
+                        var v = a.pdfViewer, c = v.container, host = $("mainContainer") || document.body;
+                        if (locking || !v.pdfDocument) return;
                         locking = true;
-                        try { a.pdfViewer.currentScaleValue = "page-fit"; } catch (err) { }
+                        try {
+                            c.style.scrollbarWidth = "none";             // no scrollbars: use buttons, arrow keys or swiping
+                            c.style.left = c.style.right = "0px";        // measure against the full width first
+                            var W = host.clientWidth, H = c.clientHeight;
+                            var pd = v.getPageView(Math.min(1, v.pagesCount - 1)).div, sp, b = 0, r;
+                            v.currentScaleValue = "page-height";         // sensible starting point, then refine by measuring
+                            for (var i = 0; i < 4; i++) {
+                                sp = pd.parentElement && pd.parentElement.classList.contains("spread") ? pd.parentElement : pd;
+                                b = pd.clientLeft || 0;                  // width of the page's transparent border
+                                r = sp.getBoundingClientRect();
+                                var f = Math.min((H + b) / r.height, (W + 2 * b) / r.width);
+                                if (Math.abs(f - 1) < 0.004) break;
+                                v.currentScaleValue = String(v.currentScale * f);
+                            }
+                            target = v.currentScale;
+                            var w = Math.min(W, Math.round(r.width - 2 * b)), side = Math.max(0, Math.round((W - w) / 2));
+                            c.style.left = c.style.right = side + "px";
+                            goTo(spreadStart(app.page));                 // re-align to the start of the current spread
+                        } catch (err) { console.warn("fit failed:", err); }
                         locking = false;
                     }
-                    bus.on("pagesinit", fit);
+                    bus.on("pagesinit", function () { setModes(); fit(); });
                     bus.on("pagesloaded", fit);
+                    bus.on("scrollmodechanged", fit);
+                    bus.on("spreadmodechanged", fit);
+                    var rz; window.addEventListener("resize", function () { clearTimeout(rz); rz = setTimeout(fit, 150); });
+                    // When any scrolling stops (swipe, search jump, drag), snap back to the start of a whole spread.
+                    a.pdfViewer.container.addEventListener("scrollend", function () {
+                        if (!locking && pages()) goTo(spreadStart(app.page));
+                    });
                     bus.on("pagechanging", function (e) { pageIn.value = e.pageNumber; });
                     bus.on("pagesloaded", refreshPager);
                     bus.on("scalechanging", function (e) {
-                        if (e.presetValue !== "page-fit") { fit(); return; }
-                        var has = e.presetValue && scaleSel.querySelector('option[value="' + e.presetValue + '"]');
-                        if (has) { scaleSel.value = e.presetValue; return; }
+                        if (locking || !target) return;                          // ignore our own changes / before the first fit
+                        if (Math.abs(e.scale - target) > 0.001) { fit(); return; }   // anything else changed the zoom: put it back
                         var c = $("kCustom"); c.textContent = Math.round(e.scale * 100) + "%"; c.hidden = false; scaleSel.value = "custom";
                     });
                     bus.on("updatefindmatchescount", function (e) {
