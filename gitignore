@@ -1,2 +1,9 @@
-/.vscode/
-/.dev/
+# For development-purposes only
+.vscode/
+
+# Python-related directories that are generated automatically.
+venv/
+.venv/
+env/
+.env/
+__pycache__/
