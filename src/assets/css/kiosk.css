@@ -214,7 +214,8 @@ body,
   color: var(--gray-800);
 }
 
-#kioskPanel section {
+#kioskPanel section,
+#kioskPanel footer {
   border-top: 1px solid var(--border-color-default);
   padding: var(--spacing-double) 0;
 }
@@ -226,6 +227,14 @@ body,
   align-items: center;
 }
 
+.krow:has(#kFind) {
+  justify-content: flex-end;
+}
+
+.krow #kFind {
+  flex: 0 1 100%;
+}
+
 .krow > input[type="search"] {
   flex: 1 1 200px;
   cursor: text;
@@ -233,4 +242,83 @@ body,
 
 #kFindInfo {
   opacity: 0.8;
+}
+
+/* Information Modal */
+#kioskInfoBtn {
+  position: fixed;
+  top: var(--spacing-quadruple);
+  left: var(--spacing-quadruple);
+  z-index: 50;
+  font: inherit;
+  font-size: 1rem;
+  font-family: sans-serif;
+  cursor: pointer;
+  color: var(--gray-950);
+  background: var(--gray-200);
+  border: 1px solid var(--border-color-default);
+  border-radius: var(--corners);
+  padding: var(--spacing-default);
+  box-shadow: 0 2px 8px var(--shadow-effect-default);
+}
+#kioskInfoBtn:focus {
+  border-color: var(--highlight, #00c853);
+  outline: 2px solid var(--highlight, #00c853);
+}
+
+#kInfoView {
+  color: var(--gray-800);
+}
+
+#DevLinks,
+#CGOLinks {
+  list-style: none;
+  display: flex;
+  justify-content: center;
+  gap: clamp(var(--spacing-default), 10vw, var(--spacing-quadruple));
+  padding-left: 0;
+}
+
+#DevLinks a,
+#CGOLinks a {
+  display: block;
+  color: var(--gray-800);
+  text-align: center;
+  text-decoration: none;
+  line-height: 0;
+}
+
+#CGOLinks a {
+  color: #1b9a43;
+}
+
+#CGOLinks ::selection {
+  color: var(--gray-100);
+}
+
+#DevLinks a > i,
+#CGOLinks a > i {
+  font-size: 24px;
+  height: 100%;
+}
+
+#mainContainer::after {
+  content: "";
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  aspect-ratio: 1/1;
+  height: auto;
+  width: 50%;
+  background: url(../img/trecelogo.webp) no-repeat;
+  background-size: contain;
+  backdrop-filter: opacity(0.75);
+  translate: -50% -50%;
+  opacity: 0.5;
+  z-index: 0;
+}
+
+#mainContainer > #viewerContainer {
+  opacity: 1;
+  z-index: 1;
 }

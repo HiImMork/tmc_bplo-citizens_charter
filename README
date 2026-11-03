@@ -24,6 +24,19 @@ This app works by using PDF.js modified with basic HTML, CSS, and JavaScript to 
     - Document Properties
     - Page layout
 
+# Third-party notices
+
+## PDF.js
+- Copyright Mozilla Foundation and contributors
+- License: Apache License 2.0 (see licenses/pdfjs-LICENSE)
+- Source: https://github.com/mozilla/pdf.js
+- Changes: viewer.html modified for kiosk use (toolbar hidden, custom modals, locked zoom, save/print disabled).
+
+## Font Awesome Free
+- Copyright Fonticons, Inc.
+- Icons: CC BY 4.0 · Fonts: SIL OFL 1.1 · Code: MIT
+- Source: https://fontawesome.com
+
 ***
 
 <small>*--- End of Document ---*</small>

@@ -19,18 +19,6 @@ body {
   overflow: hidden;
 }
 
-#wrapper-background {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100dvw;
-  height: 100dvh;
-  overflow: hidden;
-  background-color: #0006;
-  z-index: -1;
-}
-
 main {
   height: 100dvh;
-  background-color: #fff;
 }

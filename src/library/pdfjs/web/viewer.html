@@ -35,8 +35,15 @@ See https://github.com/adobe-type-tools/cmap-resources
         <link rel="resource" type="application/l10n" href="locale/locale.json" />
         <script src="../build/pdf.mjs" type="module"></script>
 
+        <!-- Fontawesome Icons -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.css"
+            integrity="sha512-x9WwyMYBnlXMNQ6kQ/Lyzu1NqIhLQKL5Oq6xByfXuRj7s9CskyCbLv/1IjqzJmXwFXWr0ov6jBV7Qbc0hh9nHg=="
+            crossorigin="anonymous" referrerpolicy="no-referrer">
+
         <link rel="stylesheet" href="viewer.css" />
         <link rel="stylesheet" href="../../../assets/css/kiosk.css">
+        <style id="kiosk-info-style">
+        </style>
 
         <script id="kiosk-pre">
             (function () {
@@ -55,7 +62,7 @@ See https://github.com/adobe-type-tools/cmap-resources
                         disableHistory: true,
                         defaultZoomValue: "page-fit",
                         scrollModeOnLoad: 1,   // 1 = horizontal scrolling
-                        spreadModeOnLoad: 1    // 1 = two-page spreads (pages 1-2, 3-4, ...); use 2 if page 1 is a cover
+                        spreadModeOnLoad: 0    // 0 = one page at a time (1 = two-page spreads)
                     };
                     Object.keys(opts).forEach(function (k) { try { o.set(k, opts[k]); } catch (err) { } });
                 }
@@ -1166,77 +1173,237 @@ See https://github.com/adobe-type-tools/cmap-resources
         <!-- outerContainer -->
         <div id="printContainer"></div>
 
-        <!-- ===== KIOSK: menu button, pager, modal ===== -->
-        <button id="kioskMenuBtn" type="button" aria-haspopup="dialog" aria-controls="kioskModal">&#8981;
-            Search</button>
+        <!-- Controls -->
+        <button id="kioskMenuBtn" type="button" aria-haspopup="dialog" aria-controls="kioskModal">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <span>Search</span>
+        </button>
 
         <div id="kioskPager" role="group" aria-label="Page navigation">
             <input id="kPage" type="number" min="1" inputmode="numeric" aria-label="Page number" value="1" />
             <span id="kPages" aria-live="polite">/ &ndash;</span>
         </div>
-        <button id="kioskPrev" class="kioskNav" type="button" data-act="prev"
-            aria-label="Previous page">&#8249;</button>
-        <button id="kioskNext" class="kioskNav" type="button" data-act="next" aria-label="Next page">&#8250;</button>
+        <button id="kioskPrev" class="kioskNav" type="button" data-act="prev" aria-label="Previous page">
+            <i class="fa-solid fa-chevron-left"></i>
+        </button>
+        <button id="kioskNext" class="kioskNav" type="button" data-act="next" aria-label="Next page">
+            <i class="fa-solid fa-chevron-right"></i>
+        </button>
 
+        <!-- Information Button -->
+        <button id="kioskInfoBtn" type="button" aria-haspopup="dialog" aria-controls="kioskModal">
+            <i class="fa-solid fa-circle-info"></i>
+            <span>Info</span>
+        </button>
+
+        <!-- Search Modal -->
         <div id="kioskModal" role="dialog" aria-modal="true" aria-labelledby="kTitle">
             <div id="kioskPanel">
-                <header>
-                    <h2 id="kTitle">Search</h2><button type="button" data-act="close"
-                        aria-label="Close">&#10005;</button>
-                </header>
+                <div id="kSearchView">
+                    <header>
+                        <h2 id="kTitle">Search</h2><button type="button" data-act="close" aria-label="Close">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </header>
 
-                <section>
-                    <div class="krow">
-                        <input id="kFind" type="search" placeholder="Search the document"
-                            aria-label="Search the document" autocomplete="off" />
-                        <button type="button" data-act="findprev" aria-label="Previous match">&#8593;</button>
-                        <button type="button" data-act="findnext" aria-label="Next match">&#8595;</button>
-                    </div>
-                    <div id="kFindInfo" aria-live="polite"></div>
-                </section>
+                    <section>
+                        <div class="krow">
+                            <input id="kFind" type="search" placeholder="Search the document"
+                                aria-label="Search the document" autocomplete="off" />
+                            <button type="button" data-act="findprev" aria-label="Previous match">
+                                <i class="fa-solid fa-arrow-up-long"></i>
+                                <span>Previous Match</span></button>
+                            <button type="button" data-act="findnext" aria-label="Next match">
+                                <i class="fa-solid fa-arrow-down-long"></i>
+                                <span>Next Match</span>
+                            </button>
+                        </div>
+                        <div id="kFindInfo" aria-live="polite"></div>
+                    </section>
 
-                <section hidden>
-                    <h3>Zoom</h3>
-                    <div class="krow">
-                        <button type="button" data-proxy="zoomOutButton" aria-label="Zoom out">&minus;</button>
-                        <button type="button" data-proxy="zoomInButton" aria-label="Zoom in">+</button>
-                        <select id="kScale" aria-label="Zoom level">
-                            <option value="auto">Automatic zoom</option>
-                            <option value="page-actual">Actual size</option>
-                            <option value="page-fit">Page fit</option>
-                            <option value="page-width">Page width</option>
-                            <option value="custom" id="kCustom" hidden disabled>100%</option>
-                            <option value="0.5">50%</option>
-                            <option value="0.75">75%</option>
-                            <option value="1">100%</option>
-                            <option value="1.25">125%</option>
-                            <option value="1.5">150%</option>
-                            <option value="2">200%</option>
-                            <option value="3">300%</option>
-                            <option value="4">400%</option>
-                        </select>
-                    </div>
-                    <h3>Go to</h3>
-                    <div class="krow">
-                        <button type="button" data-proxy="firstPage">First page</button>
-                        <button type="button" data-proxy="lastPage">Last page</button>
-                        <button type="button" data-proxy="pageRotateCcw">Rotate &#8634;</button>
-                        <button type="button" data-proxy="pageRotateCw">Rotate &#8635;</button>
-                    </div>
-                </section>
+                    <section hidden>
+                        <h3>Zoom</h3>
+                        <div class="krow">
+                            <button type="button" data-proxy="zoomOutButton" aria-label="Zoom out">
+                                <i class="fa-solid fa-magnifying-glass-minus"></i>
+                            </button>
+                            <button type="button" data-proxy="zoomInButton" aria-label="Zoom in">
+                                <i class="fa-solid fa-magnifying-glass-plus"></i>
+                            </button>
+                            <select id="kScale" aria-label="Zoom level">
+                                <option value="auto">Automatic zoom</option>
+                                <option value="page-actual">Actual size</option>
+                                <option value="page-fit">Page fit</option>
+                                <option value="page-width">Page width</option>
+                                <option value="custom" id="kCustom" hidden disabled>100%</option>
+                                <option value="0.5">50%</option>
+                                <option value="0.75">75%</option>
+                                <option value="1">100%</option>
+                                <option value="1.25">125%</option>
+                                <option value="1.5">150%</option>
+                                <option value="2">200%</option>
+                                <option value="3">300%</option>
+                                <option value="4">400%</option>
+                            </select>
+                        </div>
+                        <h3>Go to</h3>
+                        <div class="krow">
+                            <button type="button" data-proxy="firstPage">First page</button>
+                            <button type="button" data-proxy="lastPage">Last page</button>
+                            <button type="button" data-proxy="pageRotateCcw">
+                                <span>Rotate</span>
+                                <i class="fa-solid fa-rotate-left"></i>
+                            </button>
+                            <button type="button" data-proxy="pageRotateCw">
+                                <span>Rotate</span>
+                                <i class="fa-solid fa-rotate-right"></i>
+                            </button>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- ===== Info view ===== -->
+                <div id="kInfoView" hidden>
+                    <header>
+                        <h2 id="kInfoTitle">About this viewer</h2>
+                        <button type="button" data-act="close" aria-label="Close">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </header>
+                    <section>
+                        <h3>How to use:</h3>
+                        <p>To navigate through the PDF, you may swipe down or up to scroll through the PDF.
+                            Alternatively,
+                            you may also click the previous and next buttons found beside the main PDF reader.</p>
+                        <p>You may also search based on keyword by clicking on the search button found on the
+                            upper-right corner of the page. A pop-up will be displayed where you can type specific
+                            keywords.</p>
+                    </section>
+                    <section>
+                        <h3>Contact</h3>
+                        <p>
+                            If you have concerns or inquiry with the services provided by the City Government of Trece
+                            Martires (Trece Martires City Hall),
+                            Please contact them through the following channels:
+                        </p>
+                        <ul id="CGOLinks">
+                            <li>
+                                <a href="http://trecemartirescity.gov.ph/">
+                                    <i class="fa-solid fa-globe"></i>
+                                    <p>Official Website</p>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="https://www.facebook.com/gemmalubigan">
+                                    <i class="fa-brands fa-facebook"></i>
+                                    <p>Facebook</p>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="mailto:cmo@trecemartirescity.gov.ph">
+                                    <i class="fa-solid fa-envelope"></i>
+                                    <p>Email</p>
+                                </a>
+                            </li>
+                        </ul>
+                    </section>
+                    <section>
+                        <h3>Developer Contact</h3>
+                        <p>
+                            In case of issues, suggestions and recommendations to this project, please contact the
+                            developer through the following channels:
+                        </p>
+                        <ul id="DevLinks">
+                            <li>
+                                <a href="https://github.com/HiImMork" style="color: #05be41;">
+                                    <i class="fa-brands fa-github"></i>
+                                    <p>GitHub</p>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="https://discord.com/users/566384603007549480" style="color: #5865F2;">
+                                    <i class="fa-brands fa-discord"></i>
+                                    <p>Discord</p>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="https://www.facebook.com/HiImMork/" style="color: #1877F2;">
+                                    <i class="fa-brands fa-facebook"></i>
+                                    <p>Facebook</p>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="mailto:marksimon.fabros08@gmail.com">
+                                    <i class="fa-solid fa-envelope"></i>
+                                    <p>Email</p>
+                                </a>
+                            </li>
+                        </ul>
+                    </section>
+                    <section>
+                        <h3>Credits</h3>
+                        <ul>
+                            <li>Built on <em>PDF.js</em> by Mozilla and contributors (Apache License 2.0). Adapted for
+                                kiosk use by <a href="https://github.com/HiImMork">HiImM0rk</a></li>
+                            <li>Icons: <em><a href="https://fontawesome.com/">Font Awesome Free</a></em> (CC BY 4.0).</li>
+                            <li>This project is released under <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a>.</li>
+                            <li>Logos and PDF: <a href="https://trecemartirescity.gov.ph">City Government of Trece Martires</a></li>
+                        </ul>
+                    </section>
+                    <footer style="text-align: center;">
+                        <small>
+                            <i>
+                                <span>Currently displaying page <u><span id="kHomePage"></span></u> of <u><span
+                                            id="kInfoDoc"></span></u> pages</span> <br>
+                                This page will automatically redirects to <u>page 56</u> every after <span
+                                    id="kIdleMin"></span> minutes of inactivity.
+                            </i>
+                        </small>
+                    </footer>
+                </div>
+
             </div>
+        </div>
+
+        <!-- Credit - DO NOT DELETE -->
+        <div style="position: fixed; z-index: 999999; bottom: 4px; left: 4px; font-size: 0.85rem;">
+            <i>
+                <small>PDF viewer built on <a href="https://mozilla.github.io/pdf.js/">PDF.js (Mozilla)</a> and adapted for kiosk use by <a href="https://github.com/HiImMork">HiImM0rk</a></small> |
+                <small><a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></small>
+            </i>
         </div>
 
         <script id="kiosk-main">
             (function () {
                 "use strict";
-                var IDLE_MS = 3 * 60 * 1000;
+                var IDLE_MS = 3 * 60 * 1000;    // Timeout
+                var HOME_PAGE = 56;             // Default Page    
+                var SPREAD_MODE = 0;            // Page displayed at a time    
                 var app = null;
                 var $ = function (id) { return document.getElementById(id); };
                 var modal = $("kioskModal"), pageIn = $("kPage"), pagesLbl = $("kPages"),
                     scaleSel = $("kScale"), findIn = $("kFind"), findInfo = $("kFindInfo");
 
-                function openModal() { sync(); modal.classList.add("open"); }
+                // Open the specific modal view based on whichever button was pressed.
+                // This replaces the Ctrl + F shortcut of the browser.
+                function openModal(view) {
+                    var info = view === "info";
+                    $("kSearchView").hidden = info; $("kInfoView").hidden = !info;
+                    modal.setAttribute("aria-labelledby", info ? "kInfoTitle" : "kTitle");
+                    if (info) fillInfo();
+                    sync(); modal.classList.add("open");
+                }
+
+
+                function fillInfo() {
+                    var title = "", n = pages();
+                    try { title = (app && app.documentInfo && app.documentInfo.Title) || ""; } catch (err) { }
+                    $("kInfoDoc").textContent = (title ? title + " \u00b7 " : "") + (n ? n + " pages" : "Loading\u2026");
+                    $("kHomePage").textContent = homePage();
+                    $("kIdleMin").textContent = Math.max(1, Math.round(IDLE_MS / 60000));
+                }
+
+                /* Close the modal */
                 function closeModal() { modal.classList.remove("open"); }
                 function sync() {
                     [].forEach.call(modal.querySelectorAll("[role=radio][data-proxy]"), function (b) {
@@ -1255,7 +1422,12 @@ See https://github.com/adobe-type-tools/cmap-resources
                     var mode = app.pdfViewer.spreadMode;
                     return mode === 1 ? p - ((p - 1) % 2) : mode === 2 ? (p < 2 ? 1 : p - (p % 2)) : p;
                 }
-                // Previous / next move one spread (two pages) at a time.
+                // The start page: HOME_PAGE if the document has it, otherwise page 1.
+                function homePage() {
+                    var n = pages();
+                    return n >= HOME_PAGE ? spreadStart(HOME_PAGE) : 1;
+                }
+                // Previous / next move one view (one page, or one spread in spread mode) at a time.
                 function step(dir) {
                     if (!app || !pages()) return;
                     var mode = app.pdfViewer.spreadMode, start = spreadStart(app.page), n;
@@ -1277,7 +1449,8 @@ See https://github.com/adobe-type-tools/cmap-resources
                     pagesLbl.textContent = "/ " + (pages() || "\u2013");
                 }
 
-                $("kioskMenuBtn").addEventListener("click", openModal);
+                $("kioskMenuBtn").addEventListener("click", function () { openModal("search"); });
+                $("kioskInfoBtn").addEventListener("click", function () { openModal("info"); });
                 modal.addEventListener("click", function (e) {
                     if (e.target === modal) { closeModal(); return; }
                     var p = e.target.closest("[data-proxy]");
@@ -1340,7 +1513,7 @@ See https://github.com/adobe-type-tools/cmap-resources
                         if (!app || !pages()) return;
                         try {
                             findIn.value = ""; find("", false); findInfo.textContent = "";
-                            app.pdfViewer.currentScaleValue = "page-fit"; app.pdfViewer.currentPageNumber = 1;
+                            app.pdfViewer.currentScaleValue = "page-fit"; goTo(homePage());
                             app.pdfViewer.container.scrollTop = 0;
                         } catch (err) { }
                     }, IDLE_MS);
@@ -1357,10 +1530,10 @@ See https://github.com/adobe-type-tools/cmap-resources
                     });
                     var bus = a.eventBus;
                     var locking = false, target = 0;
-                    function setModes() {                       // horizontal scrolling + two-page spreads
+                    function setModes() {                       // horizontal scrolling, one page per view
                         var v = a.pdfViewer;
                         if (v.scrollMode !== 1) v.scrollMode = 1;
-                        if (v.spreadMode !== 1) v.spreadMode = 1;
+                        if (v.spreadMode !== SPREAD_MODE) v.spreadMode = SPREAD_MODE;
                     }
                     // Size the view so exactly ONE two-page spread fills the screen: as tall as the screen allows (or as
                     // wide, on a narrow screen). The scrolling area is then made exactly one spread wide and centred, so no
@@ -1390,8 +1563,13 @@ See https://github.com/adobe-type-tools/cmap-resources
                         } catch (err) { console.warn("fit failed:", err); }
                         locking = false;
                     }
-                    bus.on("pagesinit", function () { setModes(); fit(); });
-                    bus.on("pagesloaded", fit);
+                    var homeUntil = 0;
+                    function ensureHome() {                // during the first 3 seconds, keep the viewer on the home page
+                        if (homeUntil && Date.now() < homeUntil && pages() && app.page !== homePage()) goTo(homePage());
+                    }
+                    bus.on("pagesinit", function () { setModes(); fit(); homeUntil = Date.now() + 3000; ensureHome(); });
+                    bus.on("pagerendered", ensureHome);
+                    bus.on("pagesloaded", function () { fit(); ensureHome(); });
                     bus.on("scrollmodechanged", fit);
                     bus.on("spreadmodechanged", fit);
                     var rz; window.addEventListener("resize", function () { clearTimeout(rz); rz = setTimeout(fit, 150); });
