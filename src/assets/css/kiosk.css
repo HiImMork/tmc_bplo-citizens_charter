@@ -130,6 +130,7 @@ body,
   border-radius: var(--corners);
   font-size: 0.85rem;
   translate: -50%;
+  z-index: 1;
 }
 
 #kioskPager button {
@@ -141,20 +142,14 @@ body,
 .kioskNav {
   position: fixed;
   top: 50%;
-  padding: var(--spacing-default);
-  font-size: 2rem;
-  width: calc(2rem + var(--spacing-triple));
-  line-height: normal;
-  transform: translateY(-50%);
-}
-
-.kioskNav:active {
-  opacity: 1;
-}
-
-.kioskNav button {
+  width: 48px;
+  height: 48px;
   display: flex;
   align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  line-height: normal;
+  transform: translateY(-50%);
 }
 
 #kioskPrev {
@@ -163,6 +158,10 @@ body,
 
 #kioskNext {
   right: 20%;
+}
+
+.kioskNav i {
+  width: max-content !important;
 }
 
 #kioskPager input {
@@ -279,16 +278,21 @@ body,
   padding-left: 0;
 }
 
-#DevLinks a,
-#CGOLinks a {
+#DevLinks li {
+  display: flex;
+  align-items: center;
+  width: max-content;
+}
+
+#CGOLinks li {
+  height: max-content;
   display: block;
   color: var(--gray-800);
   text-align: center;
-  text-decoration: none;
-  line-height: 0;
+  line-height: 1.15;
 }
 
-#CGOLinks a {
+#CGOLinks li {
   color: #1b9a43;
 }
 
@@ -296,10 +300,21 @@ body,
   color: var(--gray-100);
 }
 
-#DevLinks a > i,
-#CGOLinks a > i {
+#DevLinks i,
+#CGOLinks i {
   font-size: 24px;
   height: 100%;
+}
+
+#CGOLinks i {
+  margin-bottom: var(--spacing-default);
+}
+
+#DevLinks p,
+#CGOLinks p {
+  display: block;
+  height: max-content;
+  margin: 0;
 }
 
 #mainContainer::after {
@@ -321,4 +336,11 @@ body,
 #mainContainer > #viewerContainer {
   opacity: 1;
   z-index: 1;
+}
+
+#viewerContainer {
+  box-shadow: var(--spacing-default) var(--spacing-default)
+    var(--spacing-default) var(--gray-800);
+  border: solid var(--gray-900);
+  border-width: 0 var(--spacing-half) var(--spacing-half) 0;
 }
